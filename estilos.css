@@ -1,0 +1,346 @@
+:root {
+  --tinta: #13294b;
+  --tinta-2: #1f4e79;
+  --acento: #2e6bb0;
+  --fondo: #eef3f9;
+  --papel: #ffffff;
+  --borde: #c9d6e6;
+  --gris: #5b6b80;
+  --ok: #1f7a4d;
+  --ok-fondo: #e6f4ec;
+  --aviso: #8a5a00;
+  --aviso-fondo: #fdf3d8;
+  --mal: #b3261e;
+  --mal-fondo: #fce8e6;
+  --paso: 30px;
+  --mono: Consolas, "Cascadia Mono", Menlo, "DejaVu Sans Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.contenedor {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.cabecera {
+  background: var(--tinta);
+  color: #fff;
+  padding: 14px 0;
+}
+
+.cabecera-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+h1 { margin: 0; font-size: 1.35rem; font-weight: 600; }
+.subtitulo { margin: 2px 0 0; font-size: 0.9rem; color: #c6d6ea; }
+.progreso { margin: 0; font-size: 0.95rem; white-space: nowrap; }
+
+main { padding-bottom: 48px; }
+
+/* Lista de problemas */
+.lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 12px;
+}
+
+.lista button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  font-weight: 600;
+}
+
+.lista button.resuelto {
+  background: var(--ok-fondo);
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.lista button[aria-current="true"] {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+}
+
+/* Botones */
+button {
+  font: inherit;
+  color: var(--tinta-2);
+  background: var(--papel);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) { border-color: var(--acento); }
+button:disabled { opacity: 0.45; cursor: default; }
+button:focus-visible, .linea:focus-visible, summary:focus-visible {
+  outline: 3px solid #f2a900;
+  outline-offset: 2px;
+}
+
+button.primario {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 26px;
+}
+
+/* Ayuda y enunciado */
+.ayuda {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: var(--gris);
+}
+
+.ayuda summary { cursor: pointer; color: var(--acento); width: fit-content; }
+.ayuda ul { margin: 8px 0 0; padding-left: 20px; }
+.ayuda li { margin-bottom: 4px; }
+
+.enunciado {
+  background: var(--papel);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.tema {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+
+h2 { margin: 2px 0 6px; font-size: 1.3rem; font-weight: 600; }
+.enunciado p { margin: 0 0 10px; }
+
+.rotulo {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--acento);
+  margin-bottom: 4px !important;
+}
+
+.ejecucion {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--fondo);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+code { font-family: var(--mono); }
+
+/* Tablero */
+.tablero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+@media (min-width: 780px) {
+  .tablero { grid-template-columns: 1fr 1fr; align-items: start; }
+}
+
+.panel {
+  background: var(--papel);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 12px;
+  min-width: 0;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gris);
+}
+
+.zona {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  min-height: 62px;
+  border: 1px dashed var(--borde);
+  border-radius: 8px;
+  background-color: #f8fafd;
+}
+
+/* Guías verticales: un nivel de sangría cada --paso */
+.zona-programa {
+  background-image:
+    linear-gradient(var(--borde), var(--borde)),
+    linear-gradient(var(--borde), var(--borde)),
+    linear-gradient(var(--borde), var(--borde));
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+  background-origin: content-box;
+  background-position: var(--paso) 0, calc(var(--paso) * 2) 0, calc(var(--paso) * 3) 0;
+}
+
+.zona.vacia::before {
+  content: attr(data-vacio);
+  display: block;
+  padding: 10px 6px;
+  color: var(--gris);
+  font-size: 0.92rem;
+}
+
+/* Líneas de código */
+.linea, .hueco {
+  margin: 0 0 6px calc(var(--sangria, 0) * var(--paso));
+  border-radius: 6px;
+}
+
+.linea:last-child, .hueco:last-child { margin-bottom: 0; }
+
+.linea {
+  display: flex;
+  align-items: stretch;
+  background: var(--papel);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--acento);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.linea.oculta { display: none; }
+
+.linea.seleccionada {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 2px rgba(46, 107, 176, 0.3);
+}
+
+.asa {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  color: #93a4ba;
+  font-size: 1.05rem;
+  letter-spacing: -3px;
+  touch-action: none;
+}
+
+.linea code {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 8px 9px 0;
+  font-size: 0.92rem;
+  color: var(--tinta);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.t-pal { color: var(--acento); font-weight: 700; }
+.t-cad { color: #1f7a4d; }
+.t-num { color: #a34a00; }
+
+.etiqueta {
+  flex: none;
+  align-self: center;
+  margin-right: 8px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.etiqueta:empty { display: none; }
+
+.linea.m-ok { border-left-color: var(--ok); background: var(--ok-fondo); }
+.linea.m-ok .etiqueta { color: var(--ok); }
+.linea.m-sangria { border-left-color: var(--aviso); background: var(--aviso-fondo); }
+.linea.m-sangria .etiqueta { color: var(--aviso); }
+.linea.m-lugar { border-left-color: var(--mal); background: var(--mal-fondo); }
+.linea.m-lugar .etiqueta { color: var(--mal); }
+
+.hueco {
+  border: 2px dashed var(--acento);
+  background: rgba(46, 107, 176, 0.08);
+}
+
+.fantasma {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  margin: 0;
+  pointer-events: none;
+  cursor: grabbing;
+  box-shadow: 0 8px 20px rgba(19, 41, 75, 0.25);
+  opacity: 0.96;
+}
+
+body.arrastrando { cursor: grabbing; }
+
+/* Herramientas y acciones */
+.herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.herramientas button { font-size: 0.9rem; padding: 7px 12px; }
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.mensaje {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--borde);
+  background: var(--papel);
+}
+
+.mensaje p { margin: 0 0 6px; }
+.mensaje p:last-child { margin-bottom: 0; }
+.mensaje.bien { border-color: var(--ok); background: var(--ok-fondo); }
+.mensaje.falta { border-color: var(--aviso); background: var(--aviso-fondo); }
+.mensaje strong { font-weight: 600; }
+
+@media (max-width: 480px) {
+  :root { --paso: 24px; }
+  h1 { font-size: 1.15rem; }
+  .linea code { font-size: 0.85rem; }
+  .panel { padding: 10px; }
+  .zona { padding: 6px; }
+}

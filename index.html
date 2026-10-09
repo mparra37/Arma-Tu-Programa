@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arma el programa · Pensamiento Algorítmico</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header class="cabecera">
+    <div class="contenedor cabecera-fila">
+      <div>
+        <h1>Arma el programa</h1>
+        <p class="subtitulo">Pensamiento Algorítmico · práctica de funciones</p>
+      </div>
+      <p class="progreso" id="progreso" aria-live="polite"></p>
+    </div>
+  </header>
+
+  <main class="contenedor">
+    <nav class="lista" id="lista" aria-label="Problemas"></nav>
+
+    <details class="ayuda">
+      <summary>¿Cómo se usa?</summary>
+      <ul>
+        <li>Toca una línea para pasarla a tu programa, o arrástrala. En celular o tablet, arrastra desde los puntos de la izquierda.</li>
+        <li>Arrastra las líneas para cambiar su orden.</li>
+        <li>Ajusta la sangría con los botones o moviendo la línea hacia la derecha.</li>
+        <li>Algunos problemas traen líneas que sobran: no todas se usan.</li>
+        <li>Sigue el orden del curso: importaciones, funciones, <code>main()</code> y, al final, la llamada.</li>
+      </ul>
+    </details>
+
+    <section class="enunciado" aria-labelledby="titulo">
+      <p class="tema" id="tema"></p>
+      <h2 id="titulo"></h2>
+      <p id="descripcion"></p>
+      <p class="rotulo">Ejemplo de ejecución</p>
+      <pre class="ejecucion" id="ejecucion"></pre>
+    </section>
+
+    <div class="tablero" id="tablero">
+      <section class="panel" id="panel-banco">
+        <h3>Líneas disponibles</h3>
+        <ol class="zona" id="banco" data-vacio="No quedan líneas."></ol>
+      </section>
+
+      <section class="panel" id="panel-programa">
+        <h3>Tu programa</h3>
+        <ol class="zona zona-programa" id="programa" data-vacio="Toca o arrastra las líneas para armar aquí el programa."></ol>
+        <div class="herramientas">
+          <button type="button" id="btn-menos" aria-label="Quitar sangría">◀ Sangría</button>
+          <button type="button" id="btn-mas" aria-label="Agregar sangría">Sangría ▶</button>
+          <button type="button" id="btn-quitar">Quitar línea</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="acciones">
+      <button type="button" class="primario" id="btn-revisar">Revisar</button>
+      <button type="button" id="btn-reiniciar">Reiniciar</button>
+      <button type="button" id="btn-siguiente">Siguiente ▶</button>
+    </div>
+
+    <div class="mensaje" id="mensaje" role="status" aria-live="polite" hidden></div>
+  </main>
+
+  <script src="problemas.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
