@@ -13,56 +13,128 @@
         <h1>Arma el programa</h1>
         <p class="subtitulo">Pensamiento Algorítmico · práctica de funciones</p>
       </div>
-      <p class="progreso" id="progreso" aria-live="polite"></p>
+      <div class="alumno" id="alumno" hidden>
+        <div>
+          <p class="alumno-nombre" id="alumno-nombre"></p>
+          <p class="alumno-datos">
+            <span id="alumno-matricula"></span> · Tiempo <span id="reloj">00:00</span>
+          </p>
+        </div>
+        <button type="button" id="btn-inicio">Inicio</button>
+      </div>
     </div>
   </header>
 
   <main class="contenedor">
-    <nav class="lista" id="lista" aria-label="Problemas"></nav>
+    <!-- Página de inicio -->
+    <section class="vista" id="vista-inicio" hidden>
+      <div class="tarjeta">
+        <h2>Antes de empezar</h2>
+        <p>
+          Vas a armar <span class="total"></span> programas en Python: las líneas están revueltas
+          y tú las ordenas y les das la sangría correcta.
+        </p>
 
-    <details class="ayuda">
-      <summary>¿Cómo se usa?</summary>
-      <ul>
-        <li>Toca una línea para pasarla a tu programa, o arrástrala. En celular o tablet, arrastra desde los puntos de la izquierda.</li>
-        <li>Arrastra las líneas para cambiar su orden.</li>
-        <li>Ajusta la sangría con los botones o moviendo la línea hacia la derecha.</li>
-        <li>Algunos problemas traen líneas que sobran: no todas se usan.</li>
-        <li>Sigue el orden del curso: importaciones, funciones, <code>main()</code> y, al final, la llamada.</li>
-      </ul>
-    </details>
+        <h3>Instrucciones</h3>
+        <ul class="instrucciones">
+          <li>Toca una línea para pasarla a tu programa, o arrástrala. En celular o tablet, arrastra desde los puntos de la izquierda.</li>
+          <li>Arrastra las líneas para cambiar su orden.</li>
+          <li>Ajusta la sangría con los botones o moviendo la línea hacia la derecha.</li>
+          <li>Algunos problemas traen líneas que sobran: no todas se usan.</li>
+          <li>Sigue el orden del curso: importaciones, funciones, <code>main()</code> y, al final, la llamada.</li>
+          <li>Presiona <strong>Revisar</strong> para comprobar tu programa. Verde: bien. Amarillo: sangría incorrecta. Rojo: fuera de lugar o sobra.</li>
+          <li>El tiempo empieza a contar cuando presionas Comenzar.</li>
+          <li>Al terminar los <span class="total"></span> problemas aparece tu resultado: tómale una captura de pantalla y súbela a Canvas.</li>
+        </ul>
 
-    <section class="enunciado" aria-labelledby="titulo">
-      <p class="tema" id="tema"></p>
-      <h2 id="titulo"></h2>
-      <p id="descripcion"></p>
-      <p class="rotulo">Ejemplo de ejecución</p>
-      <pre class="ejecucion" id="ejecucion"></pre>
+        <form class="formulario" id="form-inicio" novalidate>
+          <h3>Tus datos</h3>
+          <label for="campo-nombre">Nombre completo</label>
+          <input type="text" id="campo-nombre" autocomplete="name" maxlength="80">
+          <label for="campo-matricula">Matrícula</label>
+          <input type="text" id="campo-matricula" autocomplete="off" autocapitalize="characters"
+                 spellcheck="false" maxlength="12" placeholder="A01234567">
+          <p class="error" id="error-inicio" role="alert" hidden></p>
+          <div class="acciones">
+            <button type="submit" class="primario" id="btn-comenzar">Comenzar</button>
+            <button type="button" id="btn-cero" hidden>Empezar de cero</button>
+          </div>
+        </form>
+      </div>
     </section>
 
-    <div class="tablero" id="tablero">
-      <section class="panel" id="panel-banco">
-        <h3>Líneas disponibles</h3>
-        <ol class="zona" id="banco" data-vacio="No quedan líneas."></ol>
-      </section>
-
-      <section class="panel" id="panel-programa">
-        <h3>Tu programa</h3>
-        <ol class="zona zona-programa" id="programa" data-vacio="Toca o arrastra las líneas para armar aquí el programa."></ol>
-        <div class="herramientas">
-          <button type="button" id="btn-menos" aria-label="Quitar sangría">◀ Sangría</button>
-          <button type="button" id="btn-mas" aria-label="Agregar sangría">Sangría ▶</button>
-          <button type="button" id="btn-quitar">Quitar línea</button>
+    <!-- Práctica -->
+    <section class="vista" id="vista-practica" hidden>
+      <div class="avance-fila">
+        <div class="avance" id="avance" role="progressbar" aria-label="Problemas resueltos" aria-valuemin="0">
+          <div class="avance-barra" id="avance-barra"></div>
         </div>
+        <p class="progreso" id="progreso"></p>
+      </div>
+
+      <nav class="lista" id="lista" aria-label="Problemas"></nav>
+
+      <section class="enunciado" aria-labelledby="titulo">
+        <p class="tema">
+          <span id="tema"></span>
+          <span class="insignia" id="insignia" hidden>✓ Resuelto</span>
+        </p>
+        <h2 id="titulo"></h2>
+        <p id="descripcion"></p>
+        <p class="rotulo">Ejemplo de ejecución</p>
+        <pre class="ejecucion" id="ejecucion"></pre>
       </section>
-    </div>
 
-    <div class="acciones">
-      <button type="button" class="primario" id="btn-revisar">Revisar</button>
-      <button type="button" id="btn-reiniciar">Reiniciar</button>
-      <button type="button" id="btn-siguiente">Siguiente ▶</button>
-    </div>
+      <div class="tablero" id="tablero">
+        <section class="panel" id="panel-banco">
+          <h3 id="titulo-banco">Líneas disponibles</h3>
+          <ol class="zona" id="banco" data-vacio="No quedan líneas."></ol>
+        </section>
 
-    <div class="mensaje" id="mensaje" role="status" aria-live="polite" hidden></div>
+        <section class="panel" id="panel-programa">
+          <h3>Tu programa</h3>
+          <ol class="zona zona-programa" id="programa" data-vacio="Toca o arrastra las líneas para armar aquí el programa."></ol>
+          <div class="herramientas" id="herramientas">
+            <button type="button" id="btn-menos" aria-label="Quitar sangría">◀ Sangría</button>
+            <button type="button" id="btn-mas" aria-label="Agregar sangría">Sangría ▶</button>
+            <button type="button" id="btn-quitar">Quitar línea</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="acciones" id="acciones">
+        <button type="button" class="primario" id="btn-revisar">Revisar</button>
+        <button type="button" id="btn-reiniciar">Reiniciar</button>
+        <button type="button" id="btn-saltar">Saltar ▶</button>
+      </div>
+
+      <div class="mensaje" id="mensaje" role="status" aria-live="polite" hidden></div>
+    </section>
+
+    <!-- Resultado final -->
+    <section class="vista" id="vista-resultado" hidden>
+      <div class="tarjeta resultado">
+        <div class="logro">
+          <span class="palomita" aria-hidden="true">✓</span>
+          <div>
+            <h2>Práctica completada</h2>
+            <p class="resultado-curso">Arma el programa · TC1037 Pensamiento Algorítmico</p>
+          </div>
+        </div>
+        <dl class="datos">
+          <div><dt>Nombre</dt><dd id="res-nombre"></dd></div>
+          <div><dt>Matrícula</dt><dd id="res-matricula"></dd></div>
+          <div class="destacado"><dt>Tiempo</dt><dd id="res-tiempo"></dd></div>
+          <div><dt>Problemas resueltos</dt><dd id="res-problemas"></dd></div>
+          <div><dt>Revisiones</dt><dd id="res-intentos"></dd></div>
+          <div><dt>Terminó</dt><dd id="res-fecha"></dd></div>
+        </dl>
+      </div>
+      <p class="nota">Toma una captura de pantalla de este resultado y súbela a Canvas.</p>
+      <div class="acciones">
+        <button type="button" id="btn-repasar">Repasar los problemas</button>
+      </div>
+    </section>
   </main>
 
   <script src="problemas.js"></script>

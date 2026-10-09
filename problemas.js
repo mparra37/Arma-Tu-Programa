@@ -206,33 +206,4 @@ const PROBLEMAS = [
     ],
     observa: "Regla práctica: si calcula, return. Si muestra, print().",
   },
-  {
-    tema: "Varias funciones y main()",
-    titulo: "Promedio de tres calificaciones",
-    descripcion:
-      "La función promedio recibe tres calificaciones y devuelve su promedio. main() pide los datos y muestra el resultado con un decimal.",
-    ejecucion:
-      "Calificacion 1: 8\nCalificacion 2: 9\nCalificacion 3: 10\nPromedio: 9.0",
-    codigo: [
-      {
-        libre: [
-          [
-            "def promedio(a, b, c):",
-            "    suma = a + b + c",
-            "    return suma / 3",
-          ],
-          [
-            "def main():",
-            '    a = float(input("Calificacion 1: "))',
-            '    b = float(input("Calificacion 2: "))',
-            '    c = float(input("Calificacion 3: "))',
-            "    resultado = promedio(a, b, c)",
-            '    print(f"Promedio: {resultado:.1f}")',
-          ],
-        ],
-      },
-      "main()",
-    ],
-    distractores: ["    print(suma / 3)"],
-  },
 ];

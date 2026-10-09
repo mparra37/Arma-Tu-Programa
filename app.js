@@ -1,11 +1,12 @@
 (function () {
   "use strict";
 
-  const CLAVE = "parsons-tc1037";
+  const CLAVE = "parsons-tc1037-v2";
   const MAX_SANGRIA = 3;
   const UMBRAL = 6; // px que debe moverse el puntero para empezar a arrastrar
 
   const $ = (id) => document.getElementById(id);
+  const tablero = $("tablero");
   const banco = $("banco");
   const programa = $("programa");
   const mensaje = $("mensaje");
@@ -57,34 +58,58 @@
     return Object.assign({}, p, { id: p.titulo, soluciones, lineas });
   });
 
-  // ---------- Estado ----------
+  // ---------- Sesión del alumno (se guarda en su navegador) ----------
 
-  const estados = {}; // por problema: { banco, programa, marcas, intentos, resuelto }
+  function sesionNueva() {
+    return { nombre: "", matricula: "", ms: 0, intentos: {}, resueltos: [], fin: null };
+  }
+
+  function leerSesion() {
+    let s = sesionNueva();
+    try {
+      const guardada = JSON.parse(localStorage.getItem(CLAVE));
+      if (guardada && typeof guardada === "object") s = Object.assign(s, guardada);
+    } catch (e) {
+      /* sin almacenamiento: la sesión solo dura esta visita */
+    }
+    // Por si la lista de problemas cambió desde la última visita.
+    s.resueltos = s.resueltos.filter((id) => problemas.some((p) => p.id === id));
+    if (s.resueltos.length < problemas.length) s.fin = null;
+    else if (!s.fin) s.fin = Date.now();
+    return s;
+  }
+
+  function guardar() {
+    try {
+      localStorage.setItem(CLAVE, JSON.stringify(sesion));
+    } catch (e) {
+      /* ver leerSesion */
+    }
+  }
+
+  let sesion = leerSesion();
+  let estados = {}; // por problema: { banco, programa, marcas }
   let indice = 0;
   let seleccion = null; // índice de línea seleccionada en "Tu programa"
-  let resueltos = leerResueltos();
+  let vista = "";
 
-  function leerResueltos() {
-    try {
-      return new Set(JSON.parse(localStorage.getItem(CLAVE)) || []);
-    } catch (e) {
-      return new Set();
-    }
-  }
-
-  function guardarResueltos() {
-    try {
-      localStorage.setItem(CLAVE, JSON.stringify([...resueltos]));
-    } catch (e) {
-      /* sin almacenamiento: el avance solo dura esta visita */
-    }
-  }
+  const resuelto = (p) => sesion.resueltos.includes(p.id);
+  const todoResuelto = () => sesion.resueltos.length === problemas.length;
+  const hayAvance = () => sesion.ms > 0 || sesion.resueltos.length > 0;
 
   function nuevoEstado(p) {
     const orden = p.lineas.map((_, i) => i);
+    if (resuelto(p)) {
+      const sol = p.soluciones[0];
+      return {
+        banco: orden.slice(sol.length),
+        programa: sol.map((l, i) => ({ i, sangria: l.sangria })),
+        marcas: sol.map(() => "ok"),
+      };
+    }
     let mezcla = revolver(orden);
     for (let k = 0; k < 5 && mezcla.every((v, i) => v === i); k++) mezcla = revolver(orden);
-    return { banco: mezcla, programa: [], marcas: null, intentos: 0, resuelto: false };
+    return { banco: mezcla, programa: [], marcas: null };
   }
 
   function actual() {
@@ -96,6 +121,105 @@
     if (!estados[p.id]) estados[p.id] = nuevoEstado(p);
     return estados[p.id];
   }
+
+  // ---------- Tiempo ----------
+
+  function reloj(ms) {
+    const s = Math.floor(ms / 1000);
+    const dos = (n) => String(n).padStart(2, "0");
+    const h = Math.floor(s / 3600);
+    return (h ? h + ":" : "") + dos(Math.floor((s % 3600) / 60)) + ":" + dos(s % 60);
+  }
+
+  function duracion(ms) {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return (h ? h + " h " : "") + (h || m ? m + " min " : "") + (s % 60) + " s";
+  }
+
+  // Solo cuenta mientras la práctica está en pantalla y sin terminar.
+  let ultimoTic = Date.now();
+  function tic() {
+    const ahora = Date.now();
+    if (vista === "practica" && !document.hidden && !sesion.fin) {
+      sesion.ms += Math.min(ahora - ultimoTic, 2000);
+      guardar();
+      $("reloj").textContent = reloj(sesion.ms);
+    }
+    ultimoTic = ahora;
+  }
+  setInterval(tic, 1000);
+
+  // ---------- Vistas ----------
+
+  function mostrar(nueva) {
+    tic();
+    vista = nueva;
+    for (const v of ["inicio", "practica", "resultado"]) $("vista-" + v).hidden = v !== nueva;
+    $("alumno").hidden = nueva === "inicio" || !sesion.nombre;
+    $("alumno-nombre").textContent = sesion.nombre;
+    $("alumno-matricula").textContent = sesion.matricula;
+    $("reloj").textContent = reloj(sesion.ms);
+    if (nueva === "inicio") pintarInicio();
+    if (nueva === "resultado") pintarResultado();
+    window.scrollTo(0, 0);
+  }
+
+  function pintarInicio() {
+    $("campo-nombre").value = sesion.nombre;
+    $("campo-matricula").value = sesion.matricula;
+    $("error-inicio").hidden = true;
+    $("btn-comenzar").textContent = todoResuelto() ? "Ver mi resultado" : hayAvance() ? "Continuar" : "Comenzar";
+    $("btn-cero").hidden = !hayAvance();
+  }
+
+  function pintarResultado() {
+    const revisiones = Object.values(sesion.intentos).reduce((a, b) => a + b, 0);
+    $("res-nombre").textContent = sesion.nombre;
+    $("res-matricula").textContent = sesion.matricula;
+    $("res-tiempo").textContent = duracion(sesion.ms);
+    $("res-problemas").textContent = sesion.resueltos.length + " de " + problemas.length;
+    $("res-intentos").textContent = revisiones;
+    $("res-fecha").textContent = new Date(sesion.fin).toLocaleString("es-MX", {
+      dateStyle: "long",
+      timeStyle: "short",
+    });
+  }
+
+  $("form-inicio").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const nombre = $("campo-nombre").value.trim().replace(/\s+/g, " ");
+    const matricula = $("campo-matricula").value.replace(/\s+/g, "").toUpperCase();
+    if (!nombre || !matricula) {
+      $("error-inicio").textContent = "Escribe tu nombre completo y tu matrícula para continuar.";
+      $("error-inicio").hidden = false;
+      (nombre ? $("campo-matricula") : $("campo-nombre")).focus();
+      return;
+    }
+    sesion.nombre = nombre;
+    sesion.matricula = matricula;
+    guardar();
+    if (todoResuelto()) return mostrar("resultado");
+    const primero = problemas.findIndex((p) => !resuelto(p));
+    mostrar("practica");
+    irA(primero);
+  });
+
+  $("btn-cero").addEventListener("click", () => {
+    if (!confirm("Se borrarán los datos, el avance y el tiempo de esta práctica. ¿Continuar?")) return;
+    sesion = sesionNueva();
+    estados = {};
+    guardar();
+    mostrar("inicio");
+    $("campo-nombre").focus();
+  });
+
+  $("btn-inicio").addEventListener("click", () => mostrar("inicio"));
+  $("btn-repasar").addEventListener("click", () => {
+    mostrar("practica");
+    irA(0);
+  });
 
   // ---------- Resaltado de sintaxis ----------
 
@@ -123,15 +247,15 @@
     return salida + escapar(texto.slice(ultimo));
   }
 
-  // ---------- Dibujo ----------
+  // ---------- Dibujo de la práctica ----------
 
   const ETIQUETAS = { ok: "✓", sangria: "sangría", lugar: "lugar" };
 
-  function crearLinea(p, i, sangria, marca) {
+  function crearLinea(p, i, sangria, marca, fija) {
     const li = document.createElement("li");
     li.className = "linea";
     li.dataset.i = i;
-    li.tabIndex = 0;
+    if (!fija) li.tabIndex = 0;
     li.style.setProperty("--sangria", sangria);
     li.innerHTML =
       '<span class="asa" aria-hidden="true">⋮⋮</span><code>' +
@@ -145,14 +269,13 @@
   }
 
   function pintarLista() {
-    const nav = $("lista");
-    nav.replaceChildren(
+    $("lista").replaceChildren(
       ...problemas.map((p, n) => {
         const b = document.createElement("button");
         b.type = "button";
         b.textContent = n + 1;
         b.title = p.titulo;
-        const hecho = resueltos.has(p.id);
+        const hecho = resuelto(p);
         b.setAttribute("aria-label", "Problema " + (n + 1) + ": " + p.titulo + (hecho ? " (resuelto)" : ""));
         if (hecho) b.classList.add("resuelto");
         if (n === indice) b.setAttribute("aria-current", "true");
@@ -160,7 +283,11 @@
         return b;
       })
     );
-    $("progreso").textContent = resueltos.size + " de " + problemas.length + " resueltos";
+    const hechos = sesion.resueltos.length;
+    $("progreso").textContent = hechos + " de " + problemas.length + " resueltos";
+    $("avance").setAttribute("aria-valuemax", problemas.length);
+    $("avance").setAttribute("aria-valuenow", hechos);
+    $("avance-barra").style.width = (100 * hechos) / problemas.length + "%";
   }
 
   function pintarEnunciado() {
@@ -174,16 +301,27 @@
   function pintarTablero(enfocar) {
     const p = actual();
     const e = estado();
-    banco.replaceChildren(...e.banco.map((i) => crearLinea(p, i, 0, null)));
+    const hecho = resuelto(p);
+    banco.replaceChildren(...e.banco.map((i) => crearLinea(p, i, 0, null, hecho)));
     programa.replaceChildren(
       ...e.programa.map((l, k) => {
-        const li = crearLinea(p, l.i, l.sangria, e.marcas && e.marcas[k]);
-        if (l.i === seleccion) li.classList.add("seleccionada");
+        const li = crearLinea(p, l.i, l.sangria, e.marcas && e.marcas[k], hecho);
+        if (l.i === seleccion && !hecho) li.classList.add("seleccionada");
         return li;
       })
     );
     banco.classList.toggle("vacia", e.banco.length === 0);
     programa.classList.toggle("vacia", e.programa.length === 0);
+
+    // Un problema resuelto queda fijo y a la vista.
+    const sinBanco = hecho && e.banco.length === 0;
+    tablero.classList.toggle("resuelto", hecho);
+    tablero.classList.toggle("una", sinBanco);
+    $("panel-banco").hidden = sinBanco;
+    $("titulo-banco").textContent = hecho ? "Líneas que sobraban" : "Líneas disponibles";
+    $("herramientas").hidden = hecho;
+    $("acciones").hidden = hecho;
+    $("insignia").hidden = !hecho;
 
     const sel = e.programa.find((l) => l.i === seleccion);
     $("btn-menos").disabled = !sel || sel.sangria === 0;
@@ -196,27 +334,68 @@
     }
   }
 
-  function mostrarMensaje(clase, parrafos) {
+  function parrafo(t) {
+    const el = document.createElement("p");
+    if (Array.isArray(t)) {
+      const fuerte = document.createElement("strong");
+      fuerte.textContent = t[0];
+      el.append(fuerte, " " + t[1]);
+    } else {
+      el.textContent = t;
+    }
+    return el;
+  }
+
+  function mostrarMensaje(clase, nodos) {
     mensaje.className = "mensaje " + clase;
-    mensaje.replaceChildren(
-      ...parrafos.map((t) => {
-        const el = document.createElement("p");
-        if (Array.isArray(t)) {
-          const fuerte = document.createElement("strong");
-          fuerte.textContent = t[0];
-          el.append(fuerte, " " + t[1]);
-        } else {
-          el.textContent = t;
-        }
-        return el;
-      })
-    );
+    mensaje.replaceChildren(...nodos);
     mensaje.hidden = false;
   }
 
   function ocultarMensaje() {
     mensaje.hidden = true;
     mensaje.replaceChildren();
+  }
+
+  function mensajeResuelto(reciente) {
+    const p = actual();
+    const logro = document.createElement("div");
+    logro.className = "logro";
+    logro.innerHTML =
+      '<span class="palomita" aria-hidden="true">✓</span><div><p class="logro-titulo">¡Problema resuelto!</p><p></p></div>';
+    logro.querySelector("p:last-child").textContent =
+      "Lo resolviste en " + plural(sesion.intentos[p.id] || 1, "intento") + ".";
+
+    const nodos = [logro];
+    if (p.observa) nodos.push(parrafo(["Observa:", p.observa]));
+
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "primario";
+    if (todoResuelto()) {
+      nodos.push(parrafo("Terminaste los " + problemas.length + " problemas."));
+      boton.textContent = "Ver mi resultado";
+      boton.addEventListener("click", () => mostrar("resultado"));
+    } else {
+      boton.textContent = "Siguiente problema ▶";
+      boton.addEventListener("click", () => irA(siguientePendiente()));
+    }
+    nodos.push(boton);
+
+    mostrarMensaje("bien" + (reciente ? " nuevo" : ""), nodos);
+    if (reciente) {
+      mensaje.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      boton.focus({ preventScroll: true });
+    }
+  }
+
+  // Primer problema sin resolver después del actual (da la vuelta al llegar al final).
+  function siguientePendiente() {
+    for (let k = 1; k <= problemas.length; k++) {
+      const n = (indice + k) % problemas.length;
+      if (!resuelto(problemas[n])) return n;
+    }
+    return indice;
   }
 
   function irA(n) {
@@ -226,7 +405,7 @@
     pintarLista();
     pintarEnunciado();
     pintarTablero();
-    if (estado().resuelto) mensajeResuelto();
+    if (resuelto(actual())) mensajeResuelto(false);
   }
 
   // ---------- Movimientos ----------
@@ -319,8 +498,9 @@
   function revisar() {
     const p = actual();
     const e = estado();
+    if (resuelto(p)) return;
     if (e.programa.length === 0) {
-      mostrarMensaje("falta", ["Todavía no has colocado ninguna línea en tu programa."]);
+      mostrarMensaje("falta", [parrafo("Todavía no has colocado ninguna línea en tu programa.")]);
       return;
     }
 
@@ -341,21 +521,26 @@
       marcas[a] = alumno[a].sangria === mejor.sol[b].sangria ? "ok" : "sangria";
     }
     e.marcas = marcas;
-    e.intentos++;
+    sesion.intentos[p.id] = (sesion.intentos[p.id] || 0) + 1;
 
     const total = mejor.sol.length;
     const correcto = alumno.length === total && marcas.every((m) => m === "ok");
 
     if (correcto) {
-      e.resuelto = true;
-      resueltos.add(p.id);
-      guardarResueltos();
+      sesion.resueltos.push(p.id);
+      if (todoResuelto()) {
+        tic();
+        sesion.fin = Date.now();
+      }
+      guardar();
+      seleccion = null;
       pintarLista();
       pintarTablero();
-      mensajeResuelto();
+      mensajeResuelto(true);
       return;
     }
 
+    guardar();
     const lugar = marcas.filter((m) => m === "lugar").length;
     const sangria = marcas.filter((m) => m === "sangria").length;
     const partes = [];
@@ -369,20 +554,11 @@
     else if (alumno.length > total) partes.push("Tu programa tiene líneas de más: no todas se usan.");
     if (!lugar && !sangria) partes.unshift("Lo que llevas va bien.");
     pintarTablero();
-    mostrarMensaje("falta", partes);
+    mostrarMensaje("falta", partes.map(parrafo));
   }
 
   function plural(n, palabra) {
     return n + " " + palabra + (n === 1 ? "" : "s");
-  }
-
-  function mensajeResuelto() {
-    const p = actual();
-    const e = estado();
-    const partes = [["¡Correcto!", "Lo resolviste en " + plural(e.intentos, "intento") + "."]];
-    if (p.observa) partes.push(["Observa:", p.observa]);
-    if (resueltos.size === problemas.length) partes.push("Ya resolviste todos los problemas.");
-    mostrarMensaje("bien", partes);
   }
 
   // ---------- Arrastre (ratón, lápiz y dedo) ----------
@@ -392,7 +568,7 @@
   let ignorarClic = false;
 
   function alPresionar(ev) {
-    if (ev.button !== 0 || arrastre) return;
+    if (ev.button !== 0 || arrastre || resuelto(actual())) return;
     const li = ev.target.closest(".linea");
     if (!li) return;
     // Con el dedo solo se arrastra desde el asa, para no bloquear el desplazamiento.
@@ -496,8 +672,9 @@
     document.body.classList.remove("arrastrando");
     let enfocar = null;
     if (soltar) {
-      const antes = [...a.zona.children]
-        .slice(0, [...a.zona.children].indexOf(a.hueco))
+      const hijos = [...a.zona.children];
+      const antes = hijos
+        .slice(0, hijos.indexOf(a.hueco))
         .filter((el) => el.classList.contains("linea") && !el.classList.contains("oculta")).length;
       colocar(a.i, a.zona === programa ? "programa" : "banco", antes, a.sangria);
       enfocar = a.i;
@@ -513,23 +690,23 @@
     if (arrastre && ev.pointerId === arrastre.id) terminar(ev.type === "pointerup");
   }
 
-  $("tablero").addEventListener("pointerdown", alPresionar);
+  tablero.addEventListener("pointerdown", alPresionar);
   window.addEventListener("pointermove", alMover, { passive: false });
   window.addEventListener("pointerup", alSoltar);
   window.addEventListener("pointercancel", alSoltar);
 
   // ---------- Clics y teclado ----------
 
-  $("tablero").addEventListener("click", (ev) => {
-    if (ignorarClic) return;
+  tablero.addEventListener("click", (ev) => {
+    if (ignorarClic || resuelto(actual())) return;
     const li = ev.target.closest(".linea");
     if (li) alTocar(li);
   });
 
-  $("tablero").addEventListener("keydown", (ev) => {
+  tablero.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape" && arrastre) return terminar(false);
     const li = ev.target.closest(".linea");
-    if (!li) return;
+    if (!li || resuelto(actual())) return;
     const i = Number(li.dataset.i);
     const enPrograma = li.parentElement === programa;
     let usado = true;
@@ -547,7 +724,7 @@
   $("btn-mas").addEventListener("click", () => sangrar(seleccion, 1));
   $("btn-quitar").addEventListener("click", () => devolver(seleccion));
   $("btn-revisar").addEventListener("click", revisar);
-  $("btn-siguiente").addEventListener("click", () => irA(indice + 1));
+  $("btn-saltar").addEventListener("click", () => irA(indice + 1));
   $("btn-reiniciar").addEventListener("click", () => {
     delete estados[actual().id];
     seleccion = null;
@@ -555,7 +732,16 @@
     pintarTablero();
   });
 
-  // Empieza en el primer problema sin resolver.
-  const primero = problemas.findIndex((p) => !resueltos.has(p.id));
-  irA(primero < 0 ? 0 : primero);
+  // ---------- Arranque ----------
+
+  for (const el of document.querySelectorAll(".total")) el.textContent = problemas.length;
+
+  if (!sesion.nombre || !sesion.matricula) {
+    mostrar("inicio");
+  } else if (todoResuelto()) {
+    mostrar("resultado");
+  } else {
+    mostrar("practica");
+    irA(problemas.findIndex((p) => !resuelto(p)));
+  }
 })();

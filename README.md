@@ -6,6 +6,17 @@ líneas de código Python revueltas y les da la sangría correcta.
 Es un sitio estático (HTML, CSS y JavaScript, sin dependencias). Funciona en
 computadora, tablet y celular.
 
+## Cómo lo usa el alumno
+
+1. En la página de inicio lee las instrucciones y escribe su nombre y matrícula.
+2. Resuelve los problemas. El tiempo solo cuenta mientras la práctica está en
+   pantalla: se detiene en la página de inicio y con la pestaña oculta.
+3. Al terminar todos aparece el resultado con su nombre, matrícula, tiempo,
+   número de revisiones y fecha, para tomarle captura y subirla a Canvas.
+
+En un dispositivo compartido, el siguiente alumno entra a **Inicio** y presiona
+**Empezar de cero** para borrar los datos del anterior.
+
 ## Publicarlo con GitHub Pages
 
 1. Crea un repositorio en GitHub y sube el contenido de esta carpeta
@@ -56,5 +67,9 @@ codigo: [
 Notas:
 
 - El título identifica el avance guardado de cada alumno; no repitas títulos.
-- El avance se guarda en el navegador del alumno (no se envía a ningún lado).
+- El nombre, la matrícula, el avance y el tiempo se guardan en el navegador del
+  alumno (no se envían a ningún lado). Por lo mismo, el resultado no es
+  infalsificable: es un comprobante de buena fe.
+- Si cambias la lista de problemas, quien ya había terminado tendrá que
+  resolver los nuevos para volver a ver su resultado.
 - Un distractor no debe ser igual a una línea de la solución.
