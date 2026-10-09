@@ -66,6 +66,10 @@ codigo: [
 
 Notas:
 
+- Cada vez que cambies `problemas.js`, `app.js` o `estilos.css`, sube el número
+  de `?v=` en las tres referencias de `index.html`. Así el navegador de los
+  alumnos no mezcla archivos viejos (en caché) con los nuevos.
+
 - El título identifica el avance guardado de cada alumno; no repitas títulos.
 - El nombre, la matrícula, el avance y el tiempo se guardan en el navegador del
   alumno (no se envían a ningún lado). Por lo mismo, el resultado no es
