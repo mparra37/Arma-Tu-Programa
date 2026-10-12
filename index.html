@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Arma el programa · Pensamiento Algorítmico</title>
-  <!-- Al cambiar estilos.css, problemas.js o app.js, sube el número de ?v= en los
-       tres para que el navegador no mezcle archivos viejos con nuevos. -->
-  <link rel="stylesheet" href="estilos.css?v=3">
+  <!-- Al cambiar estilos.css, config.js, problemas.js o app.js, sube el número de
+       ?v= en los cuatro para que el navegador no mezcle archivos viejos con nuevos. -->
+  <link rel="stylesheet" href="estilos.css?v=5">
 </head>
 <body>
   <header class="cabecera">
@@ -47,6 +47,7 @@
           <li>Presiona <strong>Revisar</strong> para comprobar tu programa. Verde: bien. Amarillo: sangría incorrecta. Rojo: fuera de lugar o sobra.</li>
           <li>El tiempo empieza a contar cuando presionas Comenzar.</li>
           <li>Al terminar los <span class="total"></span> problemas aparece tu resultado: tómale una captura de pantalla y súbela a Canvas.</li>
+          <li id="aviso-envio" hidden>Al terminar, tu nombre, tu matrícula y tu resultado se envían a tu profesor. Si se acaba el tiempo y no terminaste, presiona <strong>Enviar avance</strong> para mandar lo que lleves.</li>
         </ul>
 
         <form class="formulario" id="form-inicio" novalidate>
@@ -72,7 +73,9 @@
           <div class="avance-barra" id="avance-barra"></div>
         </div>
         <p class="progreso" id="progreso"></p>
+        <button type="button" id="btn-avance" hidden>Enviar avance</button>
       </div>
+      <p class="avance-estado" id="avance-estado" role="status" hidden></p>
 
       <nav class="lista" id="lista" aria-label="Problemas"></nav>
 
@@ -131,6 +134,10 @@
           <div><dt>Revisiones</dt><dd id="res-intentos"></dd></div>
           <div><dt>Terminó</dt><dd id="res-fecha"></dd></div>
         </dl>
+        <p class="envio" id="res-envio" role="status" hidden>
+          <span id="res-envio-texto"></span>
+          <button type="button" id="btn-reenviar" hidden>Reintentar</button>
+        </p>
       </div>
       <p class="nota">Toma una captura de pantalla de este resultado y súbela a Canvas.</p>
       <div class="acciones">
@@ -139,7 +146,8 @@
     </section>
   </main>
 
-  <script src="problemas.js?v=3"></script>
-  <script src="app.js?v=3"></script>
+  <script src="config.js?v=5"></script>
+  <script src="problemas.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

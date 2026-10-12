@@ -25,6 +25,38 @@ En un dispositivo compartido, el siguiente alumno entra a **Inicio** y presiona
 3. En **Source** elige **Deploy from a branch**, rama `main`, carpeta `/ (root)`.
 4. La liga queda como `https://TU_USUARIO.github.io/NOMBRE_DEL_REPO/`.
 
+## Recibir los resultados en Google Sheets (opcional)
+
+Con esto, cuando un alumno termina, su resultado llega solo a una hoja de
+cálculo tuya. Usa una cuenta personal de Gmail.
+
+1. Crea una hoja nueva en <https://sheets.new> y ponle nombre.
+2. En la hoja abre **Extensiones → Apps Script**.
+3. Borra lo que haya en `Código.gs`, pega el contenido de
+   `google-sheets/Codigo.gs` y guarda.
+4. **Implementar → Nueva implementación**. En el engrane elige
+   **Aplicación web**. Ejecutar como: **Yo**. Quién tiene acceso:
+   **Cualquier usuario**. Presiona **Implementar**.
+5. Autoriza el acceso con tu cuenta. En la advertencia de aplicación no
+   verificada entra a **Configuración avanzada** y continúa.
+6. Copia la **URL de la aplicación web** (termina en `/exec`). Ábrela en el
+   navegador: debe mostrar `"ok":true`.
+7. Pega la URL en `config.js`, sube el número de `?v=` en `index.html` y haz
+   push.
+8. Resuelve la práctica una vez para comprobar que aparece el renglón.
+
+Con el registro activo aparece también el botón **Enviar avance**: el alumno
+manda lo que lleva sin haber terminado (por ejemplo, al acabarse el tiempo).
+En la hoja ese renglón dice `3 de 10 (avance)`. Cada envío es un renglón
+aparte, así que un alumno puede tener varios; la columna **Recibido** dice
+cuándo llegó cada uno.
+
+Si después cambias el script, publícalo en **Implementar → Administrar
+implementaciones → Editar → Versión: Nueva versión**; así la URL no cambia.
+
+La URL queda visible en el código del sitio, así que cualquiera podría enviar
+un renglón a mano: trátalo como comprobante de buena fe.
+
 ## Agregar o cambiar problemas
 
 Todos los problemas están en `problemas.js`. Cada uno se escribe como código

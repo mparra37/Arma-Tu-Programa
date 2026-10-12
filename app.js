@@ -2,6 +2,7 @@
   "use strict";
 
   const CLAVE = "parsons-tc1037-v2";
+  const REGISTRO = typeof URL_REGISTRO === "string" ? URL_REGISTRO.trim() : "";
   const MAX_SANGRIA = 3;
   const UMBRAL = 6; // px que debe moverse el puntero para empezar a arrastrar
 
@@ -61,7 +62,7 @@
   // ---------- Sesión del alumno (se guarda en su navegador) ----------
 
   function sesionNueva() {
-    return { nombre: "", matricula: "", ms: 0, intentos: {}, resueltos: [], fin: null };
+    return { id: "", nombre: "", matricula: "", ms: 0, intentos: {}, resueltos: [], fin: null, enviado: false, avance: null };
   }
 
   function leerSesion() {
@@ -174,18 +175,143 @@
     $("btn-cero").hidden = !hayAvance();
   }
 
+  const revisiones = () => Object.values(sesion.intentos).reduce((a, b) => a + b, 0);
+
   function pintarResultado() {
-    const revisiones = Object.values(sesion.intentos).reduce((a, b) => a + b, 0);
     $("res-nombre").textContent = sesion.nombre;
     $("res-matricula").textContent = sesion.matricula;
     $("res-tiempo").textContent = duracion(sesion.ms);
     $("res-problemas").textContent = sesion.resueltos.length + " de " + problemas.length;
-    $("res-intentos").textContent = revisiones;
+    $("res-intentos").textContent = revisiones();
     $("res-fecha").textContent = new Date(sesion.fin).toLocaleString("es-MX", {
       dateStyle: "long",
       timeStyle: "short",
     });
+    enviarResultado();
   }
+
+  // ---------- Envío del resultado al profesor (Google Sheets) ----------
+
+  let enviando = false;
+  let envioFallido = false;
+
+  function nuevoId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function pintarEnvio() {
+    const el = $("res-envio");
+    el.hidden = !REGISTRO;
+    const fallo = envioFallido && !enviando && !sesion.enviado;
+    el.className = "envio" + (sesion.enviado ? " listo" : fallo ? " fallo" : "");
+    $("res-envio-texto").textContent = sesion.enviado
+      ? "✓ Tu resultado se envió a tu profesor."
+      : fallo
+        ? "No se pudo enviar tu resultado. Revisa tu conexión."
+        : "Enviando tu resultado…";
+    $("btn-reenviar").hidden = !fallo;
+  }
+
+  // Cada envío es un renglón en la hoja. El resultado final usa el id de la sesión;
+  // un avance usa un id propio, para que el final no se descarte por repetido.
+  function datosDeEnvio(parcial) {
+    const s = sesion;
+    if (!s.id) s.id = nuevoId();
+    const hechos = s.resueltos.length;
+    return {
+      id: parcial ? s.id + "-a" + hechos + "r" + revisiones() : s.id,
+      nombre: s.nombre,
+      matricula: s.matricula,
+      tiempo: duracion(s.ms),
+      segundos: Math.floor(s.ms / 1000),
+      revisiones: revisiones(),
+      problemas: hechos + " de " + problemas.length + (parcial ? " (avance)" : ""),
+      fin: new Date(parcial ? Date.now() : s.fin).toISOString(),
+      intentos: problemas.map((p) => s.intentos[p.id] || 0).join(", "),
+    };
+  }
+
+  // El cuerpo va como texto plano: así el navegador no hace la consulta previa
+  // (preflight) que Apps Script no responde.
+  function enviar(datos) {
+    return fetch(REGISTRO, { method: "POST", body: JSON.stringify(datos) })
+      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(r.error);
+      });
+  }
+
+  function enviarResultado() {
+    if (!REGISTRO || !sesion.fin || sesion.enviado || enviando) return pintarEnvio();
+    const s = sesion;
+    enviando = true;
+    envioFallido = false;
+    pintarEnvio();
+    enviar(datosDeEnvio(false))
+      .then(() => {
+        s.enviado = true;
+        if (s === sesion) guardar();
+      })
+      .catch(() => {
+        envioFallido = true;
+      })
+      .finally(() => {
+        enviando = false;
+        pintarEnvio();
+      });
+  }
+
+  // Avance: el alumno envía lo que lleva sin haber terminado (por ejemplo, al
+  // acabarse el tiempo). Puede seguir resolviendo y enviar de nuevo.
+  let avanceEstado = ""; // "", "enviando" o "fallo"
+
+  function pintarAvance() {
+    const boton = $("btn-avance");
+    const texto = $("avance-estado");
+    boton.hidden = !REGISTRO || todoResuelto();
+    boton.disabled = avanceEstado === "enviando";
+    texto.className = "avance-estado";
+    if (boton.hidden) {
+      texto.hidden = true;
+    } else if (avanceEstado === "enviando") {
+      texto.textContent = "Enviando tu avance…";
+      texto.hidden = false;
+    } else if (avanceEstado === "fallo") {
+      texto.textContent = "No se pudo enviar tu avance. Revisa tu conexión e inténtalo de nuevo.";
+      texto.classList.add("fallo");
+      texto.hidden = false;
+    } else if (sesion.avance) {
+      const hora = new Date(sesion.avance.hora).toLocaleTimeString("es-MX", { timeStyle: "short" });
+      texto.textContent =
+        "✓ Avance enviado a tu profesor: " + sesion.avance.hechos + " de " + problemas.length + " resueltos (" + hora + ").";
+      texto.classList.add("listo");
+      texto.hidden = false;
+    } else {
+      texto.hidden = true;
+    }
+  }
+
+  function enviarAvance() {
+    if (!REGISTRO || todoResuelto() || avanceEstado === "enviando") return;
+    tic();
+    const s = sesion;
+    const hechos = s.resueltos.length;
+    avanceEstado = "enviando";
+    pintarAvance();
+    enviar(datosDeEnvio(true))
+      .then(() => {
+        s.avance = { hechos, hora: Date.now() };
+        if (s === sesion) guardar();
+        avanceEstado = "";
+      })
+      .catch(() => {
+        avanceEstado = "fallo";
+      })
+      .finally(pintarAvance);
+  }
+
+  $("btn-avance").addEventListener("click", enviarAvance);
+  $("btn-reenviar").addEventListener("click", enviarResultado);
 
   $("form-inicio").addEventListener("submit", (ev) => {
     ev.preventDefault();
@@ -196,6 +322,13 @@
       $("error-inicio").hidden = false;
       (nombre ? $("campo-matricula") : $("campo-nombre")).focus();
       return;
+    }
+    // Si corrige sus datos después de enviar, el resultado se envía de nuevo.
+    const cambio = nombre !== sesion.nombre || matricula !== sesion.matricula;
+    if (!sesion.id || (cambio && (sesion.enviado || sesion.avance))) sesion.id = nuevoId();
+    if (cambio) {
+      sesion.enviado = false;
+      sesion.avance = null;
     }
     sesion.nombre = nombre;
     sesion.matricula = matricula;
@@ -210,6 +343,7 @@
     if (!confirm("Se borrarán los datos, el avance y el tiempo de esta práctica. ¿Continuar?")) return;
     sesion = sesionNueva();
     estados = {};
+    avanceEstado = "";
     guardar();
     mostrar("inicio");
     $("campo-nombre").focus();
@@ -288,6 +422,7 @@
     $("avance").setAttribute("aria-valuemax", problemas.length);
     $("avance").setAttribute("aria-valuenow", hechos);
     $("avance-barra").style.width = (100 * hechos) / problemas.length + "%";
+    pintarAvance();
   }
 
   function pintarEnunciado() {
@@ -533,6 +668,7 @@
         sesion.fin = Date.now();
       }
       guardar();
+      enviarResultado();
       seleccion = null;
       pintarLista();
       pintarTablero();
@@ -735,6 +871,7 @@
   // ---------- Arranque ----------
 
   for (const el of document.querySelectorAll(".total")) el.textContent = problemas.length;
+  $("aviso-envio").hidden = !REGISTRO;
 
   if (!sesion.nombre || !sesion.matricula) {
     mostrar("inicio");

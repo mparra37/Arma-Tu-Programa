@@ -159,12 +159,20 @@ button.primario {
 /* Avance */
 .avance-fila {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 8px 14px;
 }
+
+.avance-fila button { padding: 6px 12px; font-size: 0.9rem; }
+
+.avance-estado { margin: 8px 0 0; color: var(--gris); }
+.avance-estado.listo { color: var(--ok); font-weight: 600; }
+.avance-estado.fallo { color: var(--mal); font-weight: 600; }
 
 .avance {
   flex: 1;
+  min-width: 120px;
   height: 10px;
   background: #d5e0ee;
   border-radius: 5px;
@@ -535,6 +543,21 @@ body.arrastrando { cursor: grabbing; }
 .datos dt { color: var(--gris); }
 .datos dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
 .datos .destacado dd { font-size: 1.5rem; color: var(--tinta); }
+
+.envio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--borde);
+  color: var(--gris);
+}
+
+.envio.listo { color: var(--ok); font-weight: 600; }
+.envio.fallo { color: var(--mal); font-weight: 600; }
+.envio button { padding: 5px 12px; font-size: 0.9rem; }
 
 @media (max-width: 480px) {
   :root { --paso: 24px; }
