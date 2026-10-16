@@ -17,13 +17,6 @@ computadora, tablet y celular.
 En un dispositivo compartido, el siguiente alumno entra a **Inicio** y presiona
 **Empezar de cero** para borrar los datos del anterior.
 
-## Publicarlo con GitHub Pages
-
-1. Crea un repositorio en GitHub y sube el contenido de esta carpeta
-   (`index.html` debe quedar en la raíz).
-2. En el repositorio entra a **Settings → Pages**.
-3. En **Source** elige **Deploy from a branch**, rama `main`, carpeta `/ (root)`.
-4. La liga queda como `https://TU_USUARIO.github.io/NOMBRE_DEL_REPO/`.
 
 ## Recibir los resultados en Google Sheets (opcional)
 
